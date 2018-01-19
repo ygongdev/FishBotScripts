@@ -1,0 +1,10 @@
+.vscode/
+
+data/
+
+__pycache__/
+Include/
+Lib/
+Scripts/
+tcl/
+pip-selfcheck.json
