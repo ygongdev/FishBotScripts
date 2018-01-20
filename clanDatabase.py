@@ -1,5 +1,6 @@
 from firebaseConfig import firebase
 from utils import parse_clan_info, parse_clan_quest_info
+import requests
 
 """
 IMPORTANT READ:
@@ -18,12 +19,13 @@ class ClanDatabase():
 		self.clan_reference = self.clans_reference.child(clan_code)
 		self.clan_info_file_path=clan_info_file_path
 		self.clan_quest_info_file_path=clan_quest_info_file_path
+		self.BASE_GOOGLE_SPREADSHEET_URL="https://sheets.googleapis.com/v4/spreadsheets/"
 
 	def initial_load_clan_info(self):
 		try:
 			print("Attempting to create new clan database")
 			clan_info = parse_clan_info(self.clan_info_file_path)
-			self.prevent_modifying_entire_database(database)
+			self.prevent_modifying_entire_database(self.database)
 			self.clans_reference.update(clan_info)
 			print("New clan database has been created successfully")
 		except Exception as error:
@@ -164,3 +166,15 @@ class ClanDatabase():
 		# If reference doesn't have clans node, it's not modifying entire database
 		except KeyError as keyError:
 			return
+
+	# def convert_to_google_spreadsheet(self, spreadsheet_id, spreadsheet_api_key):
+	# 	https://sheets.googleapis.com/v4/spreadsheets/{spreadsheetId}/values/{range}
+	# 	range = "A1"
+	# 	url = self.BASE_GOOGLE_SPREADSHEET_URL + spreadsheet_id + "/values/" + range + "?key=" + spreadsheet_api_key
+	# 	request = requests.put(
+	# 		url=url,
+	# 		body=
+	# 	)
+
+
+
