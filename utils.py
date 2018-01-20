@@ -4,24 +4,24 @@ from pprint import pprint
 """
 Database Schema
 
-	clan_code: {
-		clan_name: <string>,
-		clan_level: <number>,
-		max_titans_hit: <number>
-		members: {
-			member_id: {
-				member_name: <string>
-				max_stage: <number>
-				last_week_max_stage: <number>
-				damage: [<number>]
-				last_week_damage: [<number>]
-				clan_quest_participation: <number>
-				last_week_clan_quest_participation: <number>
-				clan_crates_shared: <number>
-			},
-			...
-		}
+clan_code: {
+	clan_name: <string>,
+	clan_level: <number>,
+	max_titans_hit: <number>
+	members: {
+		member_id: {
+			member_name: <string>
+			max_stage: <number>
+			last_week_max_stage: <number>
+			damage: [<number>]
+			last_week_damage: [<number>]
+			clan_quest_participation: <number>
+			last_week_clan_quest_participation: <number>
+			clan_crates_shared: <number>
+		},
+		...
 	}
+}
 """
 
 def parse_clan_info(file_path):
@@ -105,5 +105,3 @@ def parse_clan_quest_info(file_path):
 		}
 
 		return clan_quest_info
-
-parse_clan_quest_info("data/tt2_cq_info.json")
