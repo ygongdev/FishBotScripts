@@ -25,7 +25,16 @@ class ClanDatabase():
 		try:
 			print("Attempting to create new clan database")
 			clan_info = parse_clan_info(self.clan_info_file_path)
-			self.prevent_modifying_entire_database(self.database)
+			self.prevent_modifying_entire_database(self.clans_reference)
+			clan_code = list(clan_info.keys())[0]
+
+			if self.clan_code != clan_code:
+				print("Clan code from data and config does not match.")
+				return
+			if self.clans_reference.child(clan_code).get().val():
+				print("Clan already exists in the database.")
+				return
+			clan_info[clan_code]["max_titans_hit"] = 0
 			self.clans_reference.update(clan_info)
 			print("New clan database has been created successfully")
 		except Exception as error:

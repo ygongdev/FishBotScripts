@@ -50,7 +50,7 @@ def parse_clan_info(file_path):
 
 		for member in clan_info_data["members"]:
 			member_dictionary[member["player_code"]] = {
-				"member_name": member["name"],
+				"member_name": member["name"].replace("<MST>", "").strip(),
 				"max_stage": member["max_stage"],
 				"clan_quest_participation": member["weekly_dungeon_count"],
 				"clan_crates_shared": member["crates_shared"],
@@ -91,7 +91,7 @@ def parse_clan_quest_info(file_path):
 
 		for member in clan_quest_info_data["contributions"]:
 			member_dictionary[member["player_code"]] = {
-				"member_name": member["name"],
+				"member_name": member["name"].replace("<MST>", "").strip(),
 				"max_stage": member["max_stage"],
 				"damage": member["contribution"],
 				"clan_crates_shared": member["crates_shared"]
