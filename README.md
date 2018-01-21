@@ -17,7 +17,33 @@ All of the python packages you need are listed inside `requirements.txt`, so all
 You need to install a specific modified version of `Pyrebase` (a Python wrapper around `firebase`) from github. You just need to do this `pip install -e git+https://github.com/jlowin/Pyrebase@dont-modify-self#egg=Pyrebase`. I specifically wrote a function to detect if you're able to modify the entire database. If you are, then most likely, you didn't get this version of `Pyrebase`
 
 ## Configuration <a name="config"></a> ##
-For now, I've already included the configuration file needed for firebase. So all you need to do is change the `FILE PATHS` to point at the location of your json files.
+You'll need to create 2 files, `config.py` and `firebaseConfig.py`, which contains your own personal credentials such as tokens.
+
+### Example `firebaseConfig.py` ###
+```
+import pyrebase
+
+config = {
+    "apiKey": <your api key>,
+    "authDomain": <your auth domain>,
+    "databaseURL": <your database url>,
+    "projectId": <your project id>,
+    "storageBucket": <your storage bucket>,
+    "messagingSenderId": <your id>
+}
+
+firebase = pyrebase.initialize_app(config)
+```
+
+### Example `config.py` ###
+```
+# Modify these to the your data paths. I suggest creating a folder called data and putting them in there.
+CLAN_INFO_FILE_PATH = "data/clan_info.json"
+CLAN_QUEST_INFO_FILE_PATH = "data/clan_quest_info.json"
+CLAN_CODE = <your clan code>
+GOOGLE_SPREADSHEET_ID = <your google spreadsheet id>
+GOOGLE_SPREADSHEET_API_KEY = <your google spreadsheet api key>
+```
 
 ## Firebase <a name="firebase"></a> ##
 I use firebase to store all of the data. You shouldn't need to touch the database at all, but you can if need to.
@@ -47,6 +73,7 @@ clan_code: {
 # Usage <a name="usage"></a> #
 Before running the program, make sure you have the required json files, there are two, one for clan information, and one for clan quest information. Some commands require these json files. Example of the jsons are shown below.
 
+### Update database from json ###
 Start running the program by `python main.py` or `python3 main.py`, whichever one that works.
 
 The program will display some instructions and prompt you to enter a command. There are 4 commands:
@@ -55,6 +82,20 @@ The program will display some instructions and prompt you to enter a command. Th
 `update_stats`: updates all clan members' stats in the database (note: no clan quest damage). This reads from the clan info json.<br>
 `update_damages`: updates all clan members' damages in the database (adds damage to an array of existing damages). This reads from the clan quest info.<br>
 `weekly_reset`: move current week's stats and damages to last week and reset current week. Only do this every week after you've added all the needed data into the database.<br>
+
+### Update spreadsheet from database ###
+This approach uses Google OAuth2 with Google Sheets API. I've made the process as simple as opening an url and clicking a button
+
+1. Start running the program by `python update_spreadsheet_from_database.py` or `python3 update_spreadsheet_from_database.py`. This will host a local web server.
+2. Go to your browser and type in the link `http://localhost:8080/authorize`. This will prompt you for permission to edit the file.
+3. Click allow and now the program will execute. The redirected page should inform you whether or not the execution succeeded or failed.
+
+### Update database from spreadsheet ###
+1. Start running the program by `python update_database_from_spreadsheet.py` or `python3 update_database_from_spreadsheet.py`. 
+2. Repeat the same steps as above.
+
+### Example `spreadsheet` ###
+![spreadsheet](assets/fishbot_scripts_spreadsheet.png "spreadsheet")
 
 ### Example `clan information json` ###
 ```
@@ -107,7 +148,7 @@ The program will display some instructions and prompt you to enter a command. Th
     }, 
     ...
 ```
-### Example `clan quest information json`###
+### Example `clan quest information json` ###
 ```
 {
   "active": false, 
