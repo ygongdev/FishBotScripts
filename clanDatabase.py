@@ -35,7 +35,7 @@ class ClanDatabase():
 				print("Clan already exists in the database.")
 				return
 			clan_info[clan_code]["max_titans_hit"] = 0
-			self.clans_reference.update(clan_info)
+			self.clans_reference.set(clan_info)
 			print("New clan database has been created successfully")
 		except Exception as error:
 			print("New clan database failed to be created.")
@@ -48,6 +48,8 @@ class ClanDatabase():
 			clan_info_members = clan_info[self.clan_code]["members"]
 
 			print("Updating clan member stats...")
+
+			self._remove_kicked_or_left_members_from_database(clan_info_members)
 			for member_id, member_info in clan_members.get().val().items():
 				if member_id in clan_info_members:
 					member = clan_info_members[member_id]
@@ -167,6 +169,14 @@ class ClanDatabase():
 		except Exception as error:
 			print("Failed to reset max titans hit.")
 
+	def _remove_kicked_or_left_members_from_database(self, clan_info_members):
+		database_clan_members = self.clan_reference.child("members")
+
+		for member_id, member_info in database_clan_members.get().val().items():
+			if member_id not in clan_info_members:
+				self.clan_reference("members").child(member_id).remove()
+				print("Removed " + memeber_info["name"] + " from database.")
+
 	def prevent_modifying_entire_database(self, reference):
 		try:
 			if reference.child("clans").get().val():
@@ -176,14 +186,6 @@ class ClanDatabase():
 		except KeyError as keyError:
 			return
 
-	# def convert_to_google_spreadsheet(self, spreadsheet_id, spreadsheet_api_key):
-	# 	https://sheets.googleapis.com/v4/spreadsheets/{spreadsheetId}/values/{range}
-	# 	range = "A1"
-	# 	url = self.BASE_GOOGLE_SPREADSHEET_URL + spreadsheet_id + "/values/" + range + "?key=" + spreadsheet_api_key
-	# 	request = requests.put(
-	# 		url=url,
-	# 		body=
-	# 	)
 
 
 

@@ -95,17 +95,17 @@ def firebase_to_google_spreadsheet(credentials):
 	members_damage = data["damage"]
 
 	minInfoRow = 4
-	maxInfoRow = minInfoRow + len(members_info)
+	maxInfoRow = 53
 	minInfoCol = "B"
 	maxInfoCol = "H"
 
 	minDamageRow = 4
-	maxDamageRow = minDamageRow + len(members_last_week_damage)
+	maxDamageRow = 53
 	minDamageCol = "O"
 	maxDamageCol = "AQ"
 
 	minLWDRow = 4
-	maxLWDRow = minLWDRow + len(members_last_week_damage)
+	maxLWDRow = 53
 	minLWDCol = "AS"
 	maxLWDCol = "BU"
 
@@ -131,7 +131,20 @@ def firebase_to_google_spreadsheet(credentials):
 	)
 
 	response = request.execute()
-	pprint(response)
+
+	# Removing kicked or left members from the spreadsheet.
+	clear_request = service.spreadsheets().values().batchClear(
+		spreadsheetId=GOOGLE_SPREADSHEET_ID,
+		body={
+			"ranges": [
+				minInfoCol + str(minInfoRow + len(members_info)) + ":" + maxInfoCol + str(maxInfoRow),
+				minDamageCol + str(minDamageRow + len(members_damage)) + ":" + maxDamageCol + str(maxDamageRow),
+				minLWDCol + str(minLWDRow + len(members_last_week_damage)) + ":" + maxLWDCol + str(maxLWDRow)
+			]
+		}
+	)
+
+	clear_request.execute()
 
 def google_spreadsheet_to_firebase(credentials):
 	service = discovery.build('sheets', 'v4', credentials=credentials)
