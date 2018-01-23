@@ -1,6 +1,7 @@
 from firebaseConfig import firebase
 from utils import parse_clan_info, parse_clan_quest_info
 import requests
+from datetime import datetime, timedelta
 
 """
 IMPORTANT READ:
@@ -96,6 +97,7 @@ class ClanDatabase():
 			print(error)
 
 		self._update_max_titan_hits()
+		self._update_clan_quest_timer(clan_quest_info)
 
 	def _update_max_titan_hits(self):
 		try:
@@ -115,7 +117,55 @@ class ClanDatabase():
 			print("Max titans hit update failed.")
 			print(error)
 
+	def _update_clan_quest_timer(self, clan_quest_info):
+		duration = str(clan_quest_info[self.clan_code]["last_level_duration"])
+		start_time = (datetime.strptime(clan_quest_info[self.clan_code]["start_time"], "%Y-%m-%d %H:%M:%S") - timedelta(seconds=int(duration)) - timedelta(hours=6)).strftime("%Y-%m-%d %H:%M:%S")
+
+		print("Updating clan quest time started...")
+		try:
+			start_times = self.clan_reference.child("clan_quest_start_time").get().val()
+			if not start_times:
+				raise KeyError("no start times exist")
+
+			start_times.append(start_time)
+			self.prevent_modifying_entire_database(self.clan_reference.child("clan_quest_start_time"))
+			self.clan_reference.child("clan_quest_start_time").set(start_times)
+			print("Clan quest time started has been updated successfully.")
+
+		except KeyError as keyError:
+			start_times = [start_time]
+			self.prevent_modifying_entire_database(self.clan_reference.child("clan_quest_start_time"))
+			self.clan_reference.child("clan_quest_start_time").set(start_times)
+			print ("Clan quest time started has been updated successfully.")
+
+		except Exception as error:
+			print("Failed to update clan quest time started.")
+			print(error)
+
+		print("Updating clan quest duration...")
+		try:
+			durations = self.clan_reference.child("clan_quest_duration").get().val()
+
+			if not durations:
+				raise KeyError("no clan_quest_duration times exist")
+
+			durations.append(duration)
+			self.prevent_modifying_entire_database(self.clan_reference.child("clan_quest_duration"))
+			self.clan_reference.child("clan_quest_duration").set(durations)
+			print("Clan quest duration has been updated successfully.")
+
+		except KeyError as keyError:
+			durations = [duration]
+			self.prevent_modifying_entire_database(self.clan_reference.child("clan_quest_duration"))
+			self.clan_reference.child("clan_quest_duration").set(durations)
+			print("Clan quest duration has been updated successfully.")
+
+		except Exception as error:
+			print("Failed to update clan quest duration.")
+			print(error)
+
 	def _add_individual_damage(self, member_id, damage):
+		damage = str(damage)
 		try:
 			member_damage = self.clan_reference.child("members").child(member_id).child("damage").get().val()
 
@@ -155,9 +205,28 @@ class ClanDatabase():
 					"clan_quest_participation": 0,
 					"last_week_clan_quest_participation": old_clan_quest_participation,
 				})
+
 			print("Successfully moved current week stats to last week.")
+
 		except Exception as error:
 			print("Failed to move current week stats to last week.")
+			print(error)
+
+		try:
+			print("Moving current week clan quest start time and duration to last week...")
+			self.prevent_modifying_entire_database(self.clan_reference)
+			start_time = self.clan_reference.child("clan_quest_start_time").get().val()
+			duration = self.clan_reference.child("clan_quest_duration").get().val()
+			self.clan_reference.update({
+				"last_week_clan_quest_start_time": start_time,
+				"last_week_clan_quest_duration": duration,
+				"clan_quest_start_time": [],
+				"clan_quest_duration": []
+			})
+			print("Successfully moved current week clan quest start time and duration to last week.")
+
+		except Exception as error:
+			print("Failed to move clan quest start time and duration to last week.")
 			print(error)
 
 	def _reset_max_titans_hit(self):

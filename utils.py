@@ -69,6 +69,8 @@ def parse_clan_quest_info(file_path):
 	"""
 	Returns
 		clan_code: {
+			last_level_duration: <array>,
+			start_time: <string>
 			clan_level: <number>,
 			members: {
 				member_id: {
@@ -86,6 +88,8 @@ def parse_clan_quest_info(file_path):
 
 		clan_code = clan_quest_info_data["contributions"][0]["clan_code"]
 		clan_level = clan_quest_info_data["clan_level"]
+		last_level_duration = clan_quest_info_data["last_level_duration"]
+		start_time = clan_quest_info_data["start_time"]
 
 		member_dictionary = {}
 
@@ -100,6 +104,8 @@ def parse_clan_quest_info(file_path):
 		clan_quest_info = {
 			clan_code: {
 				"clan_level": clan_level,
+				"last_level_duration": last_level_duration,
+				"start_time": start_time,
 				"members": member_dictionary
 			}
 		}

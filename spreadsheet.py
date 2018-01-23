@@ -9,11 +9,11 @@ def read_from_firebase():
 	# each member is one row
 	members = database.child("clans").child(CLAN_CODE).get().val()["members"]
 	max_titans_hit = database.child("clans").child(CLAN_CODE).get().val()["max_titans_hit"]
+
 	spreadsheet_info = []
 	spreadsheet_last_week_damage = []
 	spreadsheet_damage = []
 	for member_id, member_info in members.items():
-		pprint(member_info)
 		name = member_info["member_name"]
 		last_week_max_stage = None
 		if "last_week_max_stage" in member_info:
@@ -34,22 +34,65 @@ def read_from_firebase():
 		if "damage" in member_info:
 			damage = member_info["damage"]
 
+
 		spreadsheet_last_week_damage.append([name] + last_week_damage)
 		spreadsheet_damage.append([name] + damage)
+
+	start_times = []
+	try:
+		start_times = database.child("clans").child(CLAN_CODE).get().val()["clan_quest_start_time"]
+	except KeyError as keyError:
+		pass
+
+	durations = []
+	try:
+		durations = database.child("clans").child(CLAN_CODE).get().val()["clan_quest_duration"]
+	except KeyError as keyError:
+		pass
+
+	last_week_start_times = []
+	try:
+		last_week_start_times = database.child("clans").child(CLAN_CODE).get().val()["last_week_clan_quest_start_time"]
+	except KeyError as keyError:
+		pass
+
+	last_week_durations = []
+	try:
+		last_week_durations = database.child("clans").child(CLAN_CODE).get().val()["last_week_clan_quest_duration"]
+	except KeyError as keyError:
+		pass
 
 	return {
 		"info": spreadsheet_info,
 		"last_week_damage": spreadsheet_last_week_damage,
 		"damage": spreadsheet_damage,
-		"max_titans_hit": max_titans_hit
+		"max_titans_hit": max_titans_hit,
+		"start_time": start_times,
+		"duration": durations,
+		"last_week_start_time": last_week_start_times,
+		"last_week_duration": last_week_durations,
 	}
 
 def write_to_firebase(data):
 	memberInfo = data["memberInfo"]
 	LWDInfo = data["LWDInfo"]
 	damageInfo = data["damageInfo"]
+	maxTitansHit = data["maxTitansHit"]
+	startTimeInfo = data["startTimeInfo"]
+	durationInfo = data["durationInfo"]
+	last_week_start_time = data["lastWeekStartTime"]
+	last_week_duration = data["lastWeekDuration"]
 
 	database = firebase.database()
+
+	database.child("clans").child(CLAN_CODE).update({
+		"max_titans_hit": maxTitansHit,
+		"clan_quest_start_time": startTimeInfo,
+		"clan_quest_duration": durationInfo,
+		"last_week_start_time": last_week_start_time,
+		"last_week_duration": last_week_duration
+	})
+
 	name_to_id = {}
 
 	memberInfoJson = {}
@@ -93,6 +136,11 @@ def firebase_to_google_spreadsheet(credentials):
 	members_info = data["info"]
 	members_last_week_damage = data["last_week_damage"]
 	members_damage = data["damage"]
+	max_titans_hit = data["max_titans_hit"]
+	start_time = data["start_time"]
+	duration = data["duration"]
+	last_week_start_time = data["last_week_start_time"]
+	last_week_duration = data["last_week_duration"]
 
 	minInfoRow = 4
 	maxInfoRow = 53
@@ -108,6 +156,24 @@ def firebase_to_google_spreadsheet(credentials):
 	maxLWDRow = 53
 	minLWDCol = "AS"
 	maxLWDCol = "BU"
+
+	LWSTRow = 54
+	minLWSTCol = "AT"
+	maxLWSTCol = "BU"
+
+	LWDuRow = 55
+	minLWDuCol = "AT"
+	maxLWDuCol = "BU"
+
+	maxTitanHitsRow = 55
+	maxTitanHitsCol = "J"
+
+	startTimeRow = 54
+	minStartTimeCol = "P"
+	maxStartTimeCol = "AQ"
+	durationRow = 55
+	minDurationCol = "P"
+	maxDurationCol = "AQ"
 
 	request = service.spreadsheets().values().batchUpdate(
 		spreadsheetId=GOOGLE_SPREADSHEET_ID,
@@ -125,6 +191,26 @@ def firebase_to_google_spreadsheet(credentials):
 				{
 					"range": minLWDCol + str(minLWDRow) + ":" + maxLWDCol + str(maxLWDRow),
 					"values": members_last_week_damage
+				},
+				{
+					"range": maxTitanHitsCol + str(maxTitanHitsRow),
+					"values": [[int(max_titans_hit)]]
+				},
+				{
+					"range": minStartTimeCol + str(startTimeRow) + ":" + maxStartTimeCol + str(startTimeRow),
+					"values": [start_time]
+				},
+				{
+					"range": minDurationCol + str(durationRow) + ":" + maxDurationCol + str(durationRow),
+					"values": [duration]
+				},
+				{
+					"range": minLWSTCol + str(LWSTRow) + ":" + maxLWSTCol + str(LWSTRow),
+					"values": [last_week_start_time]
+				},
+				{
+					"range": minLWDuCol + str(LWSTRow) + ":" + maxLWDuCol + str(LWDuRow),
+					"values": [last_week_duration]
 				},
 			]
 		}
@@ -163,14 +249,37 @@ def google_spreadsheet_to_firebase(credentials):
 	minLWDCol = "AS"
 	maxLWDCol = "BU"
 
+	LWSTRow = 54
+	minLWSTCol = "AT"
+	maxLWSTCol = "BU"
+
+	LWDuRow = 55
+	minLWDuCol = "AT"
+	maxLWDuCol = "BU"
+
+	maxTitanHitsRow = 55
+	maxTitanHitsCol = "J"
+
+	startTimeRow = 54
+	minStartTimeCol = "P"
+	maxStartTimeCol = "AQ"
+	durationRow = 55
+	minDurationCol = "P"
+	maxDurationCol = "AQ"
+
 	request = service.spreadsheets().values().batchGet(
 		spreadsheetId=GOOGLE_SPREADSHEET_ID,
 		ranges=[
 			minInfoCol + str(minInfoRow) + ":" + maxInfoCol + str(maxInfoRow),
 			minDamageCol + str(minDamageRow) + ":" + maxDamageCol + str(maxDamageRow),
 			minLWDCol + str(minLWDRow) + ":" + maxLWDCol + str(maxLWDRow),
+			maxTitanHitsCol + str(maxTitanHitsRow),
+			minStartTimeCol + str(startTimeRow) + ":" + maxStartTimeCol + str(startTimeRow),
+			minDurationCol + str(durationRow) + ":" + maxDurationCol + str(durationRow),
+			minLWSTCol + str(LWSTRow) + ":" + maxLWSTCol + str(LWSTRow),
+			minLWDuCol + str(LWDuRow) + ":" + maxLWDuCol + str(LWDuRow)
 		],
-		valueRenderOption="UNFORMATTED_VALUE"
+		valueRenderOption="FORMATTED_VALUE"
 	)
 
 	response = request.execute()
@@ -180,10 +289,49 @@ def google_spreadsheet_to_firebase(credentials):
 	memberInfo = valueRanges[0]["values"]
 	damageInfo = valueRanges[1]["values"]
 	LWDInfo = valueRanges[2]["values"]
+	maxTitansHit = int(valueRanges[3]["values"][0][0])
+	startTimeInfo = valueRanges[4]["values"][0]
+	durationInfo = valueRanges[5]["values"][0]
+	last_week_start_time = []
+	try:
+		last_week_start_time = valueRanges[6]["values"][0]
+	except:
+		pass
+	last_week_duration = []
+
+	try:
+		last_week_duration = valueRanges[7]["values"][0]
+	except:
+		pass
 
 	write_to_firebase({
 		"memberInfo": memberInfo,
 		"damageInfo": damageInfo,
 		"LWDInfo": LWDInfo,
+		"maxTitansHit": maxTitansHit,
+		"startTimeInfo": startTimeInfo,
+		"durationInfo": durationInfo,
+		"lastWeekStartTime": last_week_start_time,
+		"lastWeekDuration": last_week_duration,
 	})
+
+def increment_spreadsheet_column(column, increment):
+	lastChar = column[-1]
+
+	for i in range(increment):
+		if lastChar < "Z":
+			lastChar = chr(ord(lastChar) + 1)
+			column = column[:-1] + lastChar
+		else:
+			length = len(column)
+			column = ""
+			for j in range(length + 1):
+				column += "A"
+			lastChar = "A"
+
+	return column
+
+
+
+
 
