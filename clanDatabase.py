@@ -44,22 +44,25 @@ class ClanDatabase():
 
 	def update_everyone_stats(self):
 		try:
-			clan_members = self.clan_reference.child("members")
+			clan_members = self.clan_reference.child("members").get().val()
 			clan_info = parse_clan_info(self.clan_info_file_path)
 			clan_info_members = clan_info[self.clan_code]["members"]
 
 			print("Updating clan member stats...")
 
 			self._remove_kicked_or_left_members_from_database(clan_info_members)
-			for member_id, member_info in clan_members.get().val().items():
-				if member_id in clan_info_members:
-					member = clan_info_members[member_id]
-					name = member["member_name"]
-					max_stage = member["max_stage"]
-					clan_quest_participation = member["clan_quest_participation"]
-					clan_crates_shared = member["clan_crates_shared"]
-
+			for member_id in clan_info_members:
+				member = clan_info_members[member_id]
+				name = member["member_name"]
+				max_stage = member["max_stage"]
+				clan_quest_participation = member["clan_quest_participation"]
+				clan_crates_shared = member["clan_crates_shared"]
+				if member_id in clan_members:
 					self._update_individual_stats(member_id, name, max_stage, clan_quest_participation, clan_crates_shared)
+				else:
+					# Add new member
+					print(member_id)
+					self._add_new_member_stats(member_id, name, max_stage, clan_quest_participation, clan_crates_shared)
 			print("Clan member stats have been updated successfully")
 		except Exception as error:
 			print("Clan member stats failed to update.")
@@ -73,6 +76,22 @@ class ClanDatabase():
 				"max_stage": max_stage,
 				"clan_quest_participation": clan_quest_participation,
 				"clan_crates_shared": clan_crates_shared,
+			})
+		except Exception as error:
+			print(error)
+
+	def _add_new_member_stats(self, member_id, name, max_stage, clan_quest_participation, clan_crates_shared):
+		try:
+			self.prevent_modifying_entire_database(self.clan_reference.child("members"))
+			max_titans_hit = int(self.clan_reference.child("max_titans_hit").get().val())
+			self.clan_reference.child("members").update({
+				member_id: {
+					"member_name": name,
+					"max_stage": max_stage,
+					"clan_quest_participation": clan_quest_participation,
+					"clan_crates_shared": clan_crates_shared,
+					"damages": [ 0 for i in range(max_titans_hit) ]
+				}
 			})
 		except Exception as error:
 			print(error)
