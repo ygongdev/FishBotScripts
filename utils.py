@@ -7,7 +7,11 @@ Database Schema
 clan_code: {
 	clan_name: <string>,
 	clan_level: <number>,
-	max_titans_hit: <number>
+	max_titans_hit: <number>,
+	clan_quest_duration: <array>,
+	clan_quest_start_time: <array>,
+	last_clan_quest_duration: <array>,
+	last_clan_question_start_time: <array>,
 	members: {
 		member_id: {
 			member_name: <string>
@@ -70,7 +74,7 @@ def parse_clan_quest_info(file_path):
 	Returns
 		clan_code: {
 			last_level_duration: <array>,
-			start_time: <string>
+			start_time: <array>
 			clan_level: <number>,
 			members: {
 				member_id: {
