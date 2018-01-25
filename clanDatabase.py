@@ -88,9 +88,11 @@ class ClanDatabase():
 				member_id: {
 					"member_name": name,
 					"max_stage": max_stage,
+					"last_week_max_stage": max_stage,
+					"last_week_damage": [ "" for i in range(max_titans_hit) ],
 					"clan_quest_participation": clan_quest_participation,
 					"clan_crates_shared": clan_crates_shared,
-					"damages": [ 0 for i in range(max_titans_hit) ]
+					"damage": [ 0 for i in range(max_titans_hit) ]
 				}
 			})
 		except Exception as error:
@@ -101,6 +103,12 @@ class ClanDatabase():
 			clan_members = self.clan_reference.child("members")
 			clan_quest_info = parse_clan_quest_info(self.clan_quest_info_file_path)
 			clan_quest_members = clan_quest_info[self.clan_code]["members"]
+
+			# Make sure any new member contributions is accounted for.
+			for member_id in clan_quest_members:
+				if member_id not in clan_members.get().val():
+					print("Missing member in the database. Please update the database with the newest member. Canceling damage update...")
+					return
 
 			print("Updating clan members damage...")
 			for member_id, member_info in clan_members.get().val().items():
