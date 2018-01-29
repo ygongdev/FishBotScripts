@@ -104,14 +104,15 @@ class ClanDatabase():
 			clan_quest_info = parse_clan_quest_info(self.clan_quest_info_file_path)
 			clan_quest_members = clan_quest_info[self.clan_code]["members"]
 
+			existing_members = clan_members.get().val()
 			# Make sure any new member contributions is accounted for.
 			for member_id in clan_quest_members:
-				if member_id not in clan_members.get().val():
+				if member_id not in existing_members:
 					print("Missing member in the database. Please update the database with the newest member. Canceling damage update...")
 					return
 
 			print("Updating clan members damage...")
-			for member_id, member_info in clan_members.get().val().items():
+			for member_id, member_info in existing_members.items():
 				if member_id in clan_quest_members:
 					damage = clan_quest_members[member_id]["damage"]
 					self._add_individual_damage(member_id, damage)
@@ -122,6 +123,7 @@ class ClanDatabase():
 		except Exception as error:
 			print("Clan members damage update failed.")
 			print(error)
+			return
 
 		self._update_max_titan_hits()
 		self._update_clan_quest_timer(clan_quest_info)
