@@ -30,10 +30,10 @@ def read_from_firebase():
 		last_week_damage = []
 		if "last_week_damage" in member_info:
 			last_week_damage = member_info["last_week_damage"]
+
 		damage = []
 		if "damage" in member_info:
 			damage = member_info["damage"]
-
 
 		spreadsheet_last_week_damage.append([name] + last_week_damage)
 		spreadsheet_damage.append([name] + damage)
@@ -171,6 +171,7 @@ def firebase_to_google_spreadsheet(credentials):
 	startTimeRow = 54
 	minStartTimeCol = "P"
 	maxStartTimeCol = "AQ"
+
 	durationRow = 55
 	minDurationCol = "P"
 	maxDurationCol = "AQ"
@@ -209,7 +210,7 @@ def firebase_to_google_spreadsheet(credentials):
 					"values": [last_week_start_time]
 				},
 				{
-					"range": minLWDuCol + str(LWSTRow) + ":" + maxLWDuCol + str(LWDuRow),
+					"range": minLWDuCol + str(LWDuRow) + ":" + maxLWDuCol + str(LWDuRow),
 					"values": [last_week_duration]
 				},
 			]
@@ -218,16 +219,27 @@ def firebase_to_google_spreadsheet(credentials):
 
 	response = request.execute()
 
+	clear_request_body = {
+		"ranges": [
+			minInfoCol + str(minInfoRow + len(members_info)) + ":" + maxInfoCol + str(maxInfoRow),
+			minDamageCol + str(minDamageRow + len(members_damage)) + ":" + maxDamageCol + str(maxDamageRow),
+			minLWDCol + str(minLWDRow + len(members_last_week_damage)) + ":" + maxLWDCol + str(maxLWDRow),
+		]
+	}
+
+	if not members_damage or is_members_damage_empty(members_damage):
+		clear_request_body["ranges"].append(minDamageCol + str(minDamageRow) + ":" + maxDamageCol + str(maxDamageRow))
+
+	if not start_time:
+		clear_request_body["ranges"].append(minStartTimeCol + str(startTimeRow) + ":" + maxStartTimeCol + str(startTimeRow))
+
+	if not duration:
+		clear_request_body["ranges"].append(minDurationCol + str(durationRow) + ":" + maxDurationCol + str(durationRow))
+
 	# Removing kicked or left members from the spreadsheet.
 	clear_request = service.spreadsheets().values().batchClear(
 		spreadsheetId=GOOGLE_SPREADSHEET_ID,
-		body={
-			"ranges": [
-				minInfoCol + str(minInfoRow + len(members_info)) + ":" + maxInfoCol + str(maxInfoRow),
-				minDamageCol + str(minDamageRow + len(members_damage)) + ":" + maxDamageCol + str(maxDamageRow),
-				minLWDCol + str(minLWDRow + len(members_last_week_damage)) + ":" + maxLWDCol + str(maxLWDRow)
-			]
-		}
+		body=clear_request_body,
 	)
 
 	clear_request.execute()
@@ -263,6 +275,7 @@ def google_spreadsheet_to_firebase(credentials):
 	startTimeRow = 54
 	minStartTimeCol = "P"
 	maxStartTimeCol = "AQ"
+
 	durationRow = 55
 	minDurationCol = "P"
 	maxDurationCol = "AQ"
@@ -330,6 +343,13 @@ def increment_spreadsheet_column(column, increment):
 			lastChar = "A"
 
 	return column
+
+def is_members_damage_empty(members_damage):
+	for damage in members_damage:
+		if len(damage) > 1:
+			return False
+	return True
+
 
 
 
