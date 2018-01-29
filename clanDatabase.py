@@ -270,8 +270,8 @@ class ClanDatabase():
 
 		for member_id, member_info in database_clan_members.get().val().items():
 			if member_id not in clan_info_members:
-				self.clan_reference("members").child(member_id).remove()
-				print("Removed " + memeber_info["name"] + " from database.")
+				self.clan_reference.child("members").child(member_id).remove()
+				print("Removed " + member_info["member_name"] + " from database.")
 
 	def prevent_modifying_entire_database(self, reference):
 		try:
