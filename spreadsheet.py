@@ -176,6 +176,31 @@ def firebase_to_google_spreadsheet(credentials):
 	minDurationCol = "P"
 	maxDurationCol = "AQ"
 
+	clear_request_body = {
+		"ranges": [
+			minInfoCol + str(minInfoRow + len(members_info)) + ":" + maxInfoCol + str(maxInfoRow),
+			minDamageCol + str(minDamageRow + len(members_damage)) + ":" + maxDamageCol + str(maxDamageRow),
+			minLWDCol + str(minLWDRow + len(members_last_week_damage)) + ":" + maxLWDCol + str(maxLWDRow),
+		]
+	}
+
+	if not members_damage or is_members_damage_empty(members_damage):
+		clear_request_body["ranges"].append(minDamageCol + str(minDamageRow) + ":" + maxDamageCol + str(maxDamageRow))
+
+	if not start_time:
+		clear_request_body["ranges"].append(minStartTimeCol + str(startTimeRow) + ":" + maxStartTimeCol + str(startTimeRow))
+
+	if not duration:
+		clear_request_body["ranges"].append(minDurationCol + str(durationRow) + ":" + maxDurationCol + str(durationRow))
+
+	# Removing kicked or left members from the spreadsheet.
+	clear_request = service.spreadsheets().values().batchClear(
+		spreadsheetId=GOOGLE_SPREADSHEET_ID,
+		body=clear_request_body,
+	)
+
+	clear_request.execute()
+
 	request = service.spreadsheets().values().batchUpdate(
 		spreadsheetId=GOOGLE_SPREADSHEET_ID,
 		body={
@@ -218,31 +243,6 @@ def firebase_to_google_spreadsheet(credentials):
 	)
 
 	response = request.execute()
-
-	clear_request_body = {
-		"ranges": [
-			minInfoCol + str(minInfoRow + len(members_info)) + ":" + maxInfoCol + str(maxInfoRow),
-			minDamageCol + str(minDamageRow + len(members_damage)) + ":" + maxDamageCol + str(maxDamageRow),
-			minLWDCol + str(minLWDRow + len(members_last_week_damage)) + ":" + maxLWDCol + str(maxLWDRow),
-		]
-	}
-
-	if not members_damage or is_members_damage_empty(members_damage):
-		clear_request_body["ranges"].append(minDamageCol + str(minDamageRow) + ":" + maxDamageCol + str(maxDamageRow))
-
-	if not start_time:
-		clear_request_body["ranges"].append(minStartTimeCol + str(startTimeRow) + ":" + maxStartTimeCol + str(startTimeRow))
-
-	if not duration:
-		clear_request_body["ranges"].append(minDurationCol + str(durationRow) + ":" + maxDurationCol + str(durationRow))
-
-	# Removing kicked or left members from the spreadsheet.
-	clear_request = service.spreadsheets().values().batchClear(
-		spreadsheetId=GOOGLE_SPREADSHEET_ID,
-		body=clear_request_body,
-	)
-
-	clear_request.execute()
 
 def google_spreadsheet_to_firebase(credentials):
 	service = discovery.build('sheets', 'v4', credentials=credentials)
